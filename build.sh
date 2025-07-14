@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 set -o errexit
 
-apt-get update && apt-get install -y ffmpeg curl
-
+# Remove unnecessary packages
 pip install -r requirements.txt
 
-echo "🔍 Testing YouTube connectivity..."
-curl -I https://www.youtube.com/watch?v=dQw4w9WgXcQ \
-  && echo "✅ YouTube reachable" \
-  || echo "❌ YouTube NOT reachable"
-
-
+# Only migrate if using SQLite (no need for apt-get)
 python manage.py collectstatic --noinput
 python manage.py migrate
