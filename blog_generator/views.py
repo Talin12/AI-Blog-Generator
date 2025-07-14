@@ -100,7 +100,11 @@ def yt_title(link):
         ydl_opts = {
             'quiet': True,
             'socket_timeout': 30,
-            'retries': 10
+            'retries': 10,
+            'geo_bypass': True,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            }
         }
 
         with YoutubeDL(ydl_opts) as ydl:
