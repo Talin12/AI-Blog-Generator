@@ -6,17 +6,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.conf import settings
 import json
-import static_ffmpeg
 import os
-import assemblyai as aai
 from .models import BlogPost
-from yt_dlp import YoutubeDL
 from openai import OpenAI
 import re
 from dotenv import load_dotenv
+import google.generativeai as genai
+from .utils import get_gemini_transcript
 
 # Create your views here.
-static_ffmpeg.add_paths()
 load_dotenv()
 
 
@@ -48,16 +46,11 @@ def generate_blog(request):
                 return JsonResponse({'error': 'Invalid JSON data'}, status=400)
                 
             # Get YouTube title
-            title = yt_title(yt_link)
-            if not title:
-                print("[ERROR] Failed to get YouTube title")
-                return JsonResponse({'error': 'Failed to fetch YouTube video title'}, status=400)
+            title, transcription = get_gemini_transcript(yt_link)
             
-            # Get transcription
-            transcription = get_transcription(yt_link)
-            if not transcription:
-                print("[ERROR] Transcription failed")
-                return JsonResponse({'error': 'Failed to get transcript'}, status=500)
+            if not title or not transcription:
+                print("[ERROR] Gemini failed to get title/transcript")
+                return JsonResponse({'error': 'Failed to process YouTube video'}, status=500)
             
             # Generate blog content
             blog_content = generate_blog_from_transcription(transcription)
@@ -95,141 +88,141 @@ def generate_blog(request):
     print("[ERROR] Non-POST request received")
     return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
     
-def yt_title(link):
-    try:
-        ydl_opts = {
-            'quiet': True,
-            'socket_timeout': 30,
-            'retries': 10,
-            'geo_bypass': True,
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-            }
-        }
+# def yt_title(link):
+#     try:
+#         ydl_opts = {
+#             'quiet': True,
+#             'socket_timeout': 30,
+#             'retries': 10,
+#             'geo_bypass': True,
+#             'http_headers': {
+#                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+#             }
+#         }
 
-        with YoutubeDL(ydl_opts) as ydl:
-            print(f"[INFO] Attempting to extract info for: {link}")
-            info = ydl.extract_info(link, download=False)
+#         with YoutubeDL(ydl_opts) as ydl:
+#             print(f"[INFO] Attempting to extract info for: {link}")
+#             info = ydl.extract_info(link, download=False)
 
-            if not info:
-                print("[ERROR] No info returned from YouTube.")
-                return None
+#             if not info:
+#                 print("[ERROR] No info returned from YouTube.")
+#                 return None
 
-            title = info.get('title', 'Unknown Title')
-            duration = info.get('duration', 0)
+#             title = info.get('title', 'Unknown Title')
+#             duration = info.get('duration', 0)
 
-            print(f"[SUCCESS] Title: {title}")
-            print(f"[INFO] Duration: {duration} seconds")
+#             print(f"[SUCCESS] Title: {title}")
+#             print(f"[INFO] Duration: {duration} seconds")
 
-            if duration > 1200:  # 20 minutes
-                print(f"[WARNING] Video too long: {duration} seconds")
+#             if duration > 1200:  # 20 minutes
+#                 print(f"[WARNING] Video too long: {duration} seconds")
 
-            return title
+#             return title
 
-    except Exception as e:
-        print(f"[YT-DLP ERROR] Failed to extract info from: {link}")
-        print(f"[YT-DLP ERROR] Exception: {e}")
-        return None
+#     except Exception as e:
+#         print(f"[YT-DLP ERROR] Failed to extract info from: {link}")
+#         print(f"[YT-DLP ERROR] Exception: {e}")
+#         return None
 
 
-def download_audio(link, title):
-    try:
-        output_dir = settings.MEDIA_ROOT
-        os.makedirs(output_dir, exist_ok=True)
+# def download_audio(link, title):
+#     try:
+#         output_dir = settings.MEDIA_ROOT
+#         os.makedirs(output_dir, exist_ok=True)
         
-        safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '_', '-')).rstrip()
-        filename_base = safe_title.replace(" ", "_")
+#         safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '_', '-')).rstrip()
+#         filename_base = safe_title.replace(" ", "_")
         
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': os.path.join(output_dir, f'{filename_base}.%(ext)s'),
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-            'socket_timeout': 60,  # Increased timeout
-            'retries': 15,
-            'fragment_retries': 15,
-            'skip_unavailable_fragments': True,
-            'quiet': True,
-            'verbose': True,  # Enable detailed logs
-        }
+#         ydl_opts = {
+#             'format': 'bestaudio/best',
+#             'outtmpl': os.path.join(output_dir, f'{filename_base}.%(ext)s'),
+#             'postprocessors': [{
+#                 'key': 'FFmpegExtractAudio',
+#                 'preferredcodec': 'mp3',
+#                 'preferredquality': '192',
+#             }],
+#             'socket_timeout': 60,  # Increased timeout
+#             'retries': 15,
+#             'fragment_retries': 15,
+#             'skip_unavailable_fragments': True,
+#             'quiet': True,
+#             'verbose': True,  # Enable detailed logs
+#         }
         
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(link, download=True)
+#         with YoutubeDL(ydl_opts) as ydl:
+#             info = ydl.extract_info(link, download=True)
             
-            if not info or 'id' not in info:
-                print("[ERROR] Failed to extract video information")
-                return None
+#             if not info or 'id' not in info:
+#                 print("[ERROR] Failed to extract video information")
+#                 return None
                 
-            video_id = info['id']
-            filename = os.path.join(output_dir, f"{filename_base}.mp3")
+#             video_id = info['id']
+#             filename = os.path.join(output_dir, f"{filename_base}.mp3")
             
-            # Verify file was actually created
-            if not os.path.exists(filename):
-                print(f"[ERROR] Audio file not created: {filename}")
-                return None
+#             # Verify file was actually created
+#             if not os.path.exists(filename):
+#                 print(f"[ERROR] Audio file not created: {filename}")
+#                 return None
                 
-            file_size = os.path.getsize(filename)
-            return filename
+#             file_size = os.path.getsize(filename)
+#             return filename
             
-    except Exception as e:
-        print(f"[EXCEPTION] download_audio failed: {str(e)}")
-        return None
+#     except Exception as e:
+#         print(f"[EXCEPTION] download_audio failed: {str(e)}")
+#         return None
 
-def get_transcription(link):
-    try:
-        title = yt_title(link)
-        if not title:
-            print("[ERROR] Failed to get YouTube title in transcription")
-            return None
+# def get_transcription(link):
+#     try:
+#         title = yt_title(link)
+#         if not title:
+#             print("[ERROR] Failed to get YouTube title in transcription")
+#             return None
 
-        audio_file = download_audio(link, title)
+#         audio_file = download_audio(link, title)
         
-        if not audio_file:
-            print("[ERROR] No audio file available for transcription")
-            return None
-        aai.settings.api_key = os.getenv('ASSEMBLYAI_API_KEY')
+#         if not audio_file:
+#             print("[ERROR] No audio file available for transcription")
+#             return None
+#         aai.settings.api_key = os.getenv('ASSEMBLYAI_API_KEY')
         
-        config = aai.TranscriptionConfig(
-            language_code="en"
-        )
+#         config = aai.TranscriptionConfig(
+#             language_code="en"
+#         )
         
-        transcriber = aai.Transcriber()
+#         transcriber = aai.Transcriber()
         
-        for attempt in range(1, 4):  # Try up to 3 times
-            try:
-                # Move timeout to the transcribe() method
-                transcript = transcriber.transcribe(
-                    audio_file, 
-                    config=config,
-                )
+#         for attempt in range(1, 4):  # Try up to 3 times
+#             try:
+#                 # Move timeout to the transcribe() method
+#                 transcript = transcriber.transcribe(
+#                     audio_file, 
+#                     config=config,
+#                 )
                 
-                # Check if transcription was successful
-                if transcript.status == aai.TranscriptStatus.error:
-                    print(f"[ERROR] AssemblyAI error: {transcript.error}")
-                    continue
+#                 # Check if transcription was successful
+#                 if transcript.status == aai.TranscriptStatus.error:
+#                     print(f"[ERROR] AssemblyAI error: {transcript.error}")
+#                     continue
                     
-                if not transcript.text:
-                    print("[WARNING] Empty transcript received")
-                    continue
+#                 if not transcript.text:
+#                     print("[WARNING] Empty transcript received")
+#                     continue
                     
-                return transcript.text
+#                 return transcript.text
                 
-            except aai.TranscriptError as e:
-                print(f"[TRANSCRIPTION ERROR] Attempt {attempt}: {str(e)}")
-                if attempt == 3:
-                    return None
+#             except aai.TranscriptError as e:
+#                 print(f"[TRANSCRIPTION ERROR] Attempt {attempt}: {str(e)}")
+#                 if attempt == 3:
+#                     return None
                     
-            except Exception as e:
-                print(f"[GENERAL ERROR] Attempt {attempt}: {str(e)}")
-                if attempt == 3:
-                    return None
+#             except Exception as e:
+#                 print(f"[GENERAL ERROR] Attempt {attempt}: {str(e)}")
+#                 if attempt == 3:
+#                     return None
                 
-    except Exception as e:
-        print(f"[EXCEPTION] get_transcription failed: {str(e)}")
-        return None  
+#     except Exception as e:
+#         print(f"[EXCEPTION] get_transcription failed: {str(e)}")
+#         return None  
 
 def generate_blog_from_transcription(transcription):
     api_key = os.getenv('PERPLEXITY_API_KEY')
