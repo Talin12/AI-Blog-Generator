@@ -102,26 +102,31 @@ def yt_title(link):
             'socket_timeout': 30,
             'retries': 10
         }
-        
+
         with YoutubeDL(ydl_opts) as ydl:
+            print(f"[INFO] Attempting to extract info for: {link}")
             info = ydl.extract_info(link, download=False)
-            
+
             if not info:
-                print("[ERROR] No info returned from YouTube")
+                print("[ERROR] No info returned from YouTube.")
                 return None
-                
+
             title = info.get('title', 'Unknown Title')
-            
-            # Add duration check
             duration = info.get('duration', 0)
+
+            print(f"[SUCCESS] Title: {title}")
+            print(f"[INFO] Duration: {duration} seconds")
+
             if duration > 1200:  # 20 minutes
-                print(f"[WARNING] Long video: {duration} seconds")
-                
+                print(f"[WARNING] Video too long: {duration} seconds")
+
             return title
-            
+
     except Exception as e:
-        print(f"[ERROR] yt_title failed: {str(e)}")
+        print(f"[YT-DLP ERROR] Failed to extract info from: {link}")
+        print(f"[YT-DLP ERROR] Exception: {e}")
         return None
+
 
 def download_audio(link, title):
     try:
