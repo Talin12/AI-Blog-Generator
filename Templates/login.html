@@ -1,0 +1,321 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+      :root {
+        --primary: #a259ff;
+        --secondary: #0ef6cc;
+        --accent: #ff6f91;
+        --bg-gradient: linear-gradient(120deg, #181c27 0%, #232946 100%);
+        --nav-bg: rgba(30, 34, 54, 0.98);
+        --nav-text: #f6f7fb;
+        --card-bg: rgba(36, 40, 62, 0.92);
+        --card-blur: blur(16px);
+        --card-shadow: 0 8px 32px rgba(162, 89, 255, 0.1);
+        --border: #2f3350;
+        --radius: 1.1rem;
+        --transition: 0.19s cubic-bezier(0.4, 0, 0.2, 1);
+        --text-main: #f6f7fb;
+        --text-muted: #a1a4b9;
+        --glow: 0 0 8px var(--primary), 0 0 24px var(--primary);
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(22px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes neonBorder {
+        0% {
+          box-shadow: 0 0 8px var(--primary), 0 0 24px var(--secondary);
+        }
+        50% {
+          box-shadow: 0 0 24px var(--accent), 0 0 48px var(--primary);
+        }
+        100% {
+          box-shadow: 0 0 8px var(--primary), 0 0 24px var(--secondary);
+        }
+      }
+      @keyframes gradientMove {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      body {
+        background: var(--bg-gradient);
+        background-size: 200% 200%;
+        animation: gradientMove 12s ease-in-out infinite, fadeIn 1.2s;
+        font-family: "Inter", "Segoe UI", Arial, sans-serif;
+        color: var(--text-main);
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      nav {
+        background: var(--nav-bg);
+        color: var(--nav-text);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1.5px solid var(--border);
+        border-radius: 0 0 var(--radius) var(--radius);
+        box-shadow: 0 2px 16px rgba(162, 89, 255, 0.07);
+        animation: float 3.5s ease-in-out infinite;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(5px);
+      }
+
+      nav h1 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        margin: 0;
+        letter-spacing: -1px;
+        color: var(--primary);
+        text-shadow: var(--glow);
+        transition: color var(--transition);
+      }
+
+      nav a {
+        color: var(--nav-text);
+        text-decoration: none;
+        margin-right: 1rem;
+        font-weight: 600;
+        padding: 0.28rem 0.7rem;
+        border-radius: 0.5rem;
+        transition: background var(--transition), color var(--transition),
+          box-shadow var(--transition);
+        box-shadow: none;
+      }
+      nav a:last-child {
+        margin-right: 0;
+      }
+      nav a:focus,
+      nav a:hover {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 0 8px var(--primary);
+        outline: none;
+      }
+
+      .center-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+
+      .login-card {
+        background: var(--card-bg);
+        backdrop-filter: var(--card-blur);
+        padding: 2rem;
+        box-shadow: var(--card-shadow), 0 0 0 2px var(--primary);
+        border-radius: var(--radius);
+        max-width: 400px;
+        width: 100%;
+        animation: neonBorder 3s linear infinite, fadeIn 1.2s 0.25s backwards;
+        border: 1.5px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--secondary);
+        text-align: center;
+        letter-spacing: 0.04em;
+        text-shadow: 0 0 8px var(--secondary), 0 0 16px var(--primary);
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        letter-spacing: 0.01em;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1.5px solid var(--border);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        box-sizing: border-box;
+        background: #232946;
+        color: var(--text-main);
+        transition: border-color var(--transition), box-shadow var(--transition),
+          background 0.2s;
+        outline: none;
+        margin-bottom: 0.2rem;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--secondary);
+        background: #1a1d2a;
+      }
+
+      .login-btn {
+        width: 100%;
+        background: var(--accent);
+        color: #fff;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background var(--transition), transform var(--transition),
+          box-shadow var(--transition);
+        margin-top: 0.5rem;
+        box-shadow: 0 2px 8px var(--primary);
+        animation: float 3.5s ease-in-out infinite;
+        letter-spacing: 0.02em;
+      }
+      .login-btn:hover,
+      .login-btn:focus {
+        background: var(--secondary);
+        color: #232946;
+        transform: translateY(-2px) scale(1.04);
+        outline: none;
+        box-shadow: 0 6px 20px var(--accent);
+      }
+
+      .space-y-4 > * + * {
+        margin-top: 1rem;
+      }
+
+      .error-message {
+        color: var(--accent);
+        text-align: center;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-shadow: 0 0 8px var(--accent);
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+        background: #1a1d2a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 6px;
+      }
+
+      @media (max-width: 600px) {
+        nav {
+          flex-direction: column;
+          padding: 0.7rem 1rem;
+        }
+        .login-card {
+          padding: 1rem 0.5rem;
+        }
+        .form-title {
+          font-size: 1.07rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav>
+      <div>
+        <h1>
+          <a
+            href="login"
+            style="
+              pointer-events: auto;
+              color: inherit;
+              text-decoration: none;
+              background: none;
+              box-shadow: none;
+              transition: none;
+            "
+            onmouseover="this.style.color='inherit'; this.style.textDecoration='none'; this.style.background='none'; this.style.boxShadow='none';"
+            onmouseout="this.style.color='inherit'; this.style.textDecoration='none'; this.style.background='none'; this.style.boxShadow='none';"
+          >
+            AI Blog Generator
+          </a>
+        </h1>
+      </div>
+      <div>
+        <a href="login">Login</a>
+        <a href="signup">Signup</a>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="center-container">
+      <div class="login-card">
+        <!-- Login form -->
+        <form class="space-y-4" action="" method="POST">
+          {% csrf_token %} {% if error_message %}
+          <div class="error-message">
+            <h2>{{ error_message }}</h2>
+          </div>
+          {% endif %}
+
+          <h2 class="form-title">Login</h2>
+          <div class="form-group">
+            <label for="username" class="form-label">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter your username..."
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password..."
+              class="form-input"
+            />
+          </div>
+          <button type="submit" class="login-btn">Login</button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,469 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Blog Generator</title>
+    <style>
+      :root {
+        --primary: #a259ff;
+        --secondary: #0ef6cc;
+        --accent: #ff6f91;
+        --bg-gradient: linear-gradient(120deg, #181c27 0%, #232946 100%);
+        --nav-bg: rgba(30, 34, 54, 0.98);
+        --nav-text: #f6f7fb;
+        --card-bg: rgba(36, 40, 62, 0.92);
+        --card-blur: blur(16px);
+        --card-shadow: 0 8px 32px rgba(162, 89, 255, 0.1);
+        --border: #2f3350;
+        --radius: 1.1rem;
+        --transition: 0.19s cubic-bezier(0.4, 0, 0.2, 1);
+        --text-main: #f6f7fb;
+        --text-muted: #a1a4b9;
+        --glow: 0 0 8px var(--primary), 0 0 24px var(--primary);
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(22px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes gradientMove {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      body {
+        min-height: 100vh;
+        background: var(--bg-gradient);
+        background-size: 200% 200%;
+        animation: gradientMove 12s ease-in-out infinite;
+        font-family: "Inter", "Segoe UI", Arial, sans-serif;
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        transition: background 0.4s;
+        animation: fadeIn 1.2s ease;
+      }
+
+      nav {
+        background: var(--nav-bg);
+        color: var(--nav-text);
+        padding: 1rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1.5px solid var(--border);
+        border-radius: 0 0 var(--radius) var(--radius);
+        box-shadow: 0 2px 16px rgba(162, 89, 255, 0.07);
+        animation: float 3.5s ease-in-out infinite;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(5px);
+      }
+
+      nav h1 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        margin: 0;
+        letter-spacing: -1px;
+        color: var(--primary);
+        text-shadow: var(--glow);
+        transition: color var(--transition);
+      }
+
+      nav a {
+        color: var(--nav-text);
+        text-decoration: none;
+        margin: 0 0.45rem;
+        font-weight: 600;
+        padding: 0.28rem 0.7rem;
+        border-radius: 0.5rem;
+        transition: background var(--transition), color var(--transition),
+          box-shadow var(--transition);
+        box-shadow: none;
+      }
+
+      nav a:focus,
+      nav a:hover {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 0 8px var(--primary);
+        outline: none;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 2.5rem auto 0;
+        padding: 0 1.2rem;
+        animation: fadeIn 1.2s 0.2s backwards;
+      }
+
+      .card {
+        background: var(--card-bg);
+        backdrop-filter: var(--card-blur);
+        padding: 1.5rem;
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow), 0 0 0 1.5px var(--primary);
+        border: 1.5px solid var(--border);
+        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: box-shadow var(--transition), transform var(--transition);
+        animation: fadeIn 1.2s 0.25s backwards;
+        overflow: hidden;
+      }
+
+      .card:hover,
+      .card:focus-within {
+        box-shadow: 0 8px 36px var(--primary), 0 0 0 2.5px var(--accent);
+        transform: scale(1.021) rotate(-0.5deg);
+      }
+
+      .load {
+        width: 64px;
+        height: 64px;
+        margin: 80px auto 0;
+        border: 5px solid var(--secondary);
+        border-radius: 50%;
+        border-right-color: transparent;
+        border-bottom-color: transparent;
+        animation: spin 0.7s linear infinite, fadeIn 1.2s;
+        box-shadow: 0 2px 12px var(--accent);
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--accent) 100%
+        );
+      }
+
+      .text-center {
+        text-align: center;
+      }
+      .text-2xl {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 1.1rem;
+        color: var(--primary);
+      }
+      .text-xl {
+        font-size: 1.08rem;
+        font-weight: 600;
+        margin-bottom: 0.7rem;
+        color: var(--secondary);
+      }
+      .text-gray-700 {
+        color: var(--text-muted);
+      }
+      .mb-4 {
+        margin-bottom: 1.1rem;
+      }
+      .mt-10 {
+        margin-top: 2.5rem;
+      }
+      .mt-2 {
+        margin-top: 0.5rem;
+      }
+      .space-y-4 > * + * {
+        margin-top: 1.1rem;
+      }
+
+      .flex {
+        display: flex;
+      }
+      .flex-col {
+        flex-direction: column;
+      }
+      .flex-grow {
+        flex-grow: 1;
+      }
+      .justify-between {
+        justify-content: space-between;
+      }
+      .space-x-4 > * + * {
+        margin-left: 1rem;
+      }
+
+      .p-4 {
+        padding: 1rem;
+      }
+      .p-2 {
+        padding: 0.5rem;
+      }
+      .rounded-md {
+        border-radius: 0.6rem;
+      }
+      .rounded-r-md {
+        border-top-right-radius: 0.6rem;
+        border-bottom-right-radius: 0.6rem;
+      }
+      .border {
+        border: 1.5px solid var(--border);
+      }
+      .border-blue-400 {
+        border-color: var(--primary);
+      }
+
+      .bg-blue-600 {
+        background: var(--primary);
+      }
+      .bg-blue-700 {
+        background: var(--primary);
+      }
+      .text-white {
+        color: #fff;
+      }
+      .text-black {
+        color: #222;
+      }
+
+      .text-center-footer {
+        text-align: center;
+        padding: 1.2rem;
+        margin-top: 1.5rem;
+        color: var(--text-muted);
+        font-size: 1rem;
+        letter-spacing: 0.01em;
+        animation: fadeIn 1.5s 0.4s backwards;
+      }
+
+      input[type="url"],
+      input[type="text"],
+      input[type="email"],
+      input[type="password"] {
+        flex-grow: 1;
+        padding: 0.7rem;
+        border: 1.5px solid var(--border);
+        border-radius: 0.6rem;
+        font-size: 1rem;
+        background: #232946;
+        color: var(--text-main);
+        transition: border-color var(--transition), box-shadow var(--transition),
+          background 0.2s;
+        outline: none;
+        margin-bottom: 0.5rem;
+        animation: fadeIn 1.1s 0.3s backwards;
+        box-shadow: 0 0 0 0 var(--primary);
+      }
+
+      input[type="url"]:focus,
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      input[type="password"]:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--secondary);
+        background: #1a1d2a;
+      }
+
+      button {
+        background: var(--accent);
+        color: #fff;
+        padding: 0.7rem 1.3rem;
+        border: none;
+        border-radius: 0.6rem;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 700;
+        transition: background var(--transition), transform var(--transition),
+          box-shadow var(--transition);
+        margin-left: 0.5rem;
+        box-shadow: 0 2px 8px var(--primary);
+        animation: float 3.5s ease-in-out infinite;
+        letter-spacing: 0.03em;
+      }
+
+      button:hover,
+      button:focus {
+        background: var(--secondary);
+        color: #232946;
+        transform: translateY(-2px) scale(1.05);
+        outline: none;
+        box-shadow: 0 6px 20px var(--accent);
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+        background: #1a1d2a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 6px;
+      }
+
+      @media (max-width: 600px) {
+        nav {
+          flex-direction: column;
+          padding: 0.7rem 1rem;
+        }
+        .container {
+          padding: 0 0.4rem;
+        }
+        .card {
+          padding: 1rem 0.5rem;
+        }
+        .text-2xl {
+          font-size: 1.07rem;
+        }
+        .text-xl {
+          font-size: 0.97rem;
+        }
+      }
+
+      /* Neon border animation for cards (optional) */
+      @keyframes neonBorder {
+        0% {
+          box-shadow: 0 0 8px var(--primary), 0 0 24px var(--secondary);
+        }
+        50% {
+          box-shadow: 0 0 24px var(--accent), 0 0 48px var(--primary);
+        }
+        100% {
+          box-shadow: 0 0 8px var(--primary), 0 0 24px var(--secondary);
+        }
+      }
+      .card {
+        animation: neonBorder 3s linear infinite, fadeIn 1.2s 0.25s backwards;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- navbar -->
+    <nav>
+      <div>
+        <h1>
+          <a
+            href="/"
+            style="
+              pointer-events: auto;
+              color: inherit;
+              text-decoration: none;
+              background: none;
+              box-shadow: none;
+              transition: none;
+            "
+            onmouseover="this.style.color='inherit'; this.style.textDecoration='none'; this.style.background='none'; this.style.boxShadow='none';"
+            onmouseout="this.style.color='inherit'; this.style.textDecoration='none'; this.style.background='none'; this.style.boxShadow='none';"
+          >
+            AI Blog Generator
+          </a>
+        </h1>
+      </div>
+      <div>
+        <a href="/">Welcome {{user.username}}</a>
+        <a href="/blog-list">Saved Blog Posts</a>
+        <a href="logout">Logout</a>
+      </div>
+    </nav>
+    <br /><br />
+
+    <!-- main -->
+    <div class="container">
+      <div class="card">
+        <!-- Introduction section -->
+        <div class="text-center">
+          <h2 class="text-2xl mb-4">Welcome to the AI Blog Generator</h2>
+          <p class="text-gray-700">
+            Generate high-quality blog articles from YouTube videos using
+            artificial intelligence. Simply enter the link to the YouTube video
+            below and let the AI create the content for you!
+          </p>
+        </div>
+        <br />
+
+        <!-- Youtube Section -->
+        <div>
+          <h2 class="text-xl mb-4">Enter Youtube Video Link</h2>
+          <div class="flex space-x-4">
+            <input
+              id="youtubeLink"
+              type="url"
+              placeholder="Paste Youtube Link..."
+            />
+            <button id="generateBlogButton">Generate</button>
+          </div>
+        </div>
+        <!-- section for loading circle -->
+        <div style="display: none" id="loading-circle" class="load"></div>
+
+        <!-- Generated Blog Display Section -->
+        <section class="mt-10 flex-grow">
+          <h2 class="text-xl mb-4">Generated Blog Article</h2>
+          <div id="blogContent" class="mt-2 text-gray-700 space-y-4"></div>
+        </section>
+      </div>
+    </div>
+
+    <footer class="text-center-footer text-black">
+      Powered by Talin
+    </footer>
+
+    <script>
+      document
+        .getElementById("generateBlogButton")
+        .addEventListener("click", async () => {
+          const youtubeLink = document.getElementById("youtubeLink").value;
+          const blogContent = document.getElementById("blogContent");
+
+          if (youtubeLink) {
+            document.getElementById("loading-circle").style.display = "block";
+            blogContent.innerHTML = ""; // Clear previous content
+
+            const endpointUrl = "/generate-blog";
+
+            try {
+              const response = await fetch(endpointUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ link: youtubeLink }),
+              });
+
+              const data = await response.json();
+
+              blogContent.innerText = data.content;
+            } catch (error) {
+              console.error("Error occurred:", error);
+              alert("Something went wrong. Please try again later.");
+            }
+            document.getElementById("loading-circle").style.display = "none";
+          } else {
+            alert("Please enter a YouTube link.");
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: Ai-blog-app
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn ai_blog_app.wsgi:application"
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: ASSEMBLYAI_API_KEY
+        sync: false
+      - key: PERPLEXITY_API_KEY
+        sync: false
